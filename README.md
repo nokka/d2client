@@ -4,6 +4,7 @@
 
 D2Client is a TCP client that logs into the [Diablo II](http://eu.blizzard.com/en-gb/games/d2/)  server and can then write messages to the server, both in the chat and whisper specific accounts.
 
+![Message example](docs/d2client_screen.png)
 
 ## Install
 
