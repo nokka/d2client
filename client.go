@@ -15,31 +15,12 @@ var (
 )
 
 // Client provides operations on the diablo game client.
-type Client interface {
-	// Opens a connection to the given host.
-	Open(string) error
-
-	// Closes the connection.
-	Close()
-
-	// Logs the given user onto the host.
-	Login(string, string) error
-
-	// Write will send a message over TCP to the diablo server.
-	Write(string) error
-
-	// Whisper is a helper function to send a message directly to an account.
-	Whisper(string, string) error
-
-	// Reads all the data over the TCP connection.
-	Read(chan []byte, chan error)
-}
-
-type client struct {
+type Client struct {
 	connection net.Conn
 }
 
-func (c *client) Open(host string) error {
+// Open opens a connection to the given host.
+func (c *Client) Open(host string) error {
 	// Resolve the host.
 	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
@@ -59,7 +40,7 @@ func (c *client) Open(host string) error {
 }
 
 // Close will close the socket if it's open.
-func (c *client) Close() {
+func (c *Client) Close() {
 	if c.connection != nil {
 		c.connection.Close()
 	}
@@ -67,7 +48,7 @@ func (c *client) Close() {
 
 // Login needs to run before you can actually send any message, will
 // return an error if we can't connect to the server.
-func (c *client) Login(account string, password string) error {
+func (c *Client) Login(account string, password string) error {
 	if c.connection == nil {
 		return ErrNotConnected
 	}
@@ -96,7 +77,11 @@ func (c *client) Login(account string, password string) error {
 }
 
 // Write will take the message and write it over the connection.
-func (c *client) Write(message string) error {
+func (c *Client) Write(message string) error {
+	if c.connection == nil {
+		return ErrNotConnected
+	}
+
 	msg := fmt.Sprintf("%s\n\n", message)
 
 	// Write message.
@@ -109,7 +94,11 @@ func (c *client) Write(message string) error {
 }
 
 // Whisper is a helper function to whisper a specific account with a message.
-func (c *client) Whisper(account string, message string) error {
+func (c *Client) Whisper(account string, message string) error {
+	if c.connection == nil {
+		return ErrNotConnected
+	}
+
 	msg := fmt.Sprintf("/msg %s %s\n\n", account, message)
 
 	// Whisper message to the account.
@@ -122,7 +111,10 @@ func (c *client) Whisper(account string, message string) error {
 }
 
 // Reads all the output of the tcp connection on a channel.
-func (c *client) Read(ch chan []byte, errors chan error) {
+func (c *Client) Read(ch chan []byte, errors chan error) error {
+	if c.connection == nil {
+		return ErrNotConnected
+	}
 
 	// Make a byte slice to read data into.
 	buf := make([]byte, 1024)
@@ -140,9 +132,11 @@ func (c *client) Read(ch chan []byte, errors chan error) {
 			ch <- buf[:bytes]
 		}
 	}(ch, errors)
+
+	return nil
 }
 
 // New creates a new client with all dependencies.
-func New() Client {
-	return &client{}
+func New() *Client {
+	return &Client{}
 }
