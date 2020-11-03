@@ -24,13 +24,13 @@ func (c *Client) Open(host string) error {
 	// Resolve the host.
 	addr, err := net.ResolveTCPAddr("tcp", host)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Dial the host for a connection.
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Set connection on the client.
